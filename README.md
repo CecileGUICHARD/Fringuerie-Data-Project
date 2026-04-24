@@ -2,6 +2,11 @@
 
 SQL • KPI • Looker • Data Quality • Scenario Modeling
 Real-world data project combining analytics, dashboarding and operational data collection in a non-profit retail context.
+
+## Project Presentation
+
+[View Full Project Presentation (PDF)](presentation/Echos_sales_final.pdf)
+
 ## Overview
 
 This project focuses on the data analysis and operational tracking of **La Fringuerie**, a local second-hand textile activity run by the association *Les Échos Ludiques*.
