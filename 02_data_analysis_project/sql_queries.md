@@ -1,158 +1,192 @@
 # SQL Queries
 
-This section documents examples of SQL logic used during the data analysis project.
+This section highlights selected SQL analyses developed during the project.
 
-The queries are simplified and anonymized for portfolio purposes.
+Rather than listing many queries, the examples below illustrate four analytical themes:
+
+- operational performance monitoring  
+- transaction behavior analysis  
+- category mix benchmark analysis  
+- promotional uplift analysis
+
+Together, they showcase aggregation logic, window functions, segmentation and KPI-oriented analysis.
 
 ---
 
-## 1. Revenue by product category
+## 1. Monthly performance: revenue, weight sold and opening days
 
 ```sql
 SELECT
-    category,
-    SUM(amount) AS total_revenue
-FROM sales
-GROUP BY category
-ORDER BY total_revenue DESC;
+  DATE_TRUNC(Date, MONTH) AS month,
+  FORMAT_DATE('%b %Y', DATE_TRUNC(Date, MONTH)) AS month_label,
+
+  ROUND(SUM(turnover), 2) AS total_turnover,
+  ROUND(SUM(weight), 2) AS total_weight,
+
+  COUNT(DISTINCT Date) AS nb_opening_days
+
+FROM `second-hand-insights.projet_wagon.combined_echos_sales`
+
+GROUP BY
+  month,
+  month_label
+
+ORDER BY month
 ```
 
 ### Purpose
 
-This query identifies which product categories generate the most revenue.
+This query aggregates La Fringuerie sales data by month in order to compare three operational indicators:
+
+- monthly revenue
+- monthly weight sold
+- number of opening days
+
+It was used to build a multi-metric performance view showing how sales activity evolves over time and how opening frequency may influence turnover and sold volume.
 
 ---
 
-## 2. Quantity sold by category
+## 2. Monthly transaction behavior: basket, quantity and transaction volume
 
 ```sql
 SELECT
-    category,
-    SUM(quantity) AS total_items_sold
-FROM sales
-GROUP BY category
-ORDER BY total_items_sold DESC;
+
+DATE_TRUNC(Date, MONTH) AS month,
+FORMAT_DATE('%b %Y', DATE_TRUNC(Date, MONTH)) AS month_label,
+
+ROUND(AVG(qty),2) AS avg_quantity,
+
+ROUND(AVG(turnover),2) AS avg_basket,
+
+COUNT(DISTINCT id_transaction) AS transactions_count
+
+FROM `second-hand-insights.projet_wagon.combined_echos_sales`
+
+GROUP BY
+month,
+month_label
+
+ORDER BY month
 ```
 
 ### Purpose
 
-This query shows which categories are sold most frequently.
+This query analyzes monthly transaction behavior through three complementary indicators:
+
+- average number of items per transaction  
+- average transaction amount (average basket)  
+- monthly transaction volume
+
+It was used to understand purchasing behavior over time, identify changes in basket composition, and explore whether transaction volume and basket value evolve together.
 
 ---
 
-## 3. Revenue and quantity by category
+## 3. Best-selling sub-categories by gender ranking
+
+```sql
+WITH category_sales AS (
+
+SELECT
+    sub_category,
+    gender,
+    COUNT(product_id) AS nb_products_sold,
+    ROW_NUMBER() OVER(
+        PARTITION BY gender
+        ORDER BY COUNT(product_id) DESC
+    ) AS category_rank
+
+FROM `second-hand-insights.projet_wagon.vc_cat_final`
+
+WHERE sold = TRUE
+
+GROUP BY
+    sub_category,
+    gender
+
+)
+
+SELECT
+    gender,
+    sub_category,
+    nb_products_sold,
+    category_rank
+
+FROM category_sales
+
+WHERE category_rank <= 3
+
+ORDER BY
+    gender,
+    category_rank;
+```
+
+
+### Purpose
+
+This query ranks the top three best-selling product sub-categories within each gender segment using a window function.
+
+It was used to:
+
+- identify strongest-performing categories by gender  
+- compare female and male assortment patterns  
+- support benchmark-inspired category mix analysis  
+- inform assortment recommendations for La Fringuerie
+
+Using `ROW_NUMBER()` makes it possible to rank categories inside each gender segment rather than only ranking globally.
+
+---
+
+## 4. Impact of commercial operations on basket size and item quantity
 
 ```sql
 SELECT
-    category,
-    SUM(quantity) AS total_items_sold,
-    SUM(amount) AS total_revenue
-FROM sales
-GROUP BY category
-ORDER BY total_revenue DESC;
+
+offer_event_yes_corrected AS operation_type,
+
+ROUND(AVG(turnover),2) AS avg_basket,
+
+ROUND(AVG(qty),2) AS avg_items_per_transaction,
+
+COUNT(DISTINCT id_transaction) AS transactions_count
+
+FROM `second-hand-insights.projet_wagon.combined_echos_sales`
+
+GROUP BY
+operation_type
+
+ORDER BY
+CASE
+WHEN operation_type='opération commerciale' THEN 1
+WHEN operation_type='événement' THEN 2
+WHEN operation_type='offre spéciale' THEN 3
+WHEN operation_type='aucune opération commerciale' THEN 4
+END
 ```
 
 ### Purpose
 
-This query combines volume and revenue to compare category performance.
+This query compares transaction behavior across commercial operation types using a cleaned and standardized operation variable.
+
+It was used to analyze:
+
+- average basket value by promotion type  
+- average number of items per transaction  
+- transaction volume by operation type
+
+The objective was to assess whether promotional activity (events or special offers) is associated with higher basket value or larger baskets compared with regular activity.
 
 ---
 
-## 4. Average basket
+## SQL Techniques Demonstrated
 
-```sql
-SELECT
-    ROUND(SUM(amount) / COUNT(*), 2) AS average_basket
-FROM sales;
-```
+Examples in this section include:
 
-### Purpose
+- Aggregations (`SUM`, `AVG`, `COUNT`)
+- `GROUP BY`
+- Window functions (`ROW_NUMBER`)
+- Common Table Expressions (CTEs)
+- Segmentation analysis
+- Time series aggregation
+- Ranking logic
 
-This query calculates the average revenue per transaction.
-
----
-
-## 5. Sales by payment method
-
-```sql
-SELECT
-    payment_method,
-    COUNT(*) AS number_of_transactions,
-    SUM(amount) AS total_revenue
-FROM sales
-GROUP BY payment_method
-ORDER BY total_revenue DESC;
-```
-
-### Purpose
-
-This query analyzes how customers pay and helps prepare cash tracking.
-
----
-
-## 6. Monthly revenue
-
-```sql
-SELECT
-    DATE_TRUNC(date, MONTH) AS month,
-    SUM(amount) AS monthly_revenue,
-    SUM(quantity) AS monthly_items_sold
-FROM sales
-GROUP BY month
-ORDER BY month;
-```
-
-### Purpose
-
-This query tracks sales evolution over time.
-
----
-
-## 7. Category share in total revenue
-
-```sql
-SELECT
-    category,
-    SUM(amount) AS category_revenue,
-    ROUND(
-        SUM(amount) / SUM(SUM(amount)) OVER () * 100,
-        2
-    ) AS revenue_share_percent
-FROM sales
-GROUP BY category
-ORDER BY revenue_share_percent DESC;
-```
-
-### Purpose
-
-This query calculates the percentage contribution of each category to total revenue.
-
----
-
-## 8. Revenue by category and payment method
-
-```sql
-SELECT
-    category,
-    payment_method,
-    SUM(amount) AS total_revenue
-FROM sales
-GROUP BY category, payment_method
-ORDER BY category, total_revenue DESC;
-```
-
-### Purpose
-
-This query gives a more detailed view of sales by both category and payment method.
-
----
-
-## Notes
-
-The objective of these queries was to:
-
-- aggregate sales data
-- compare categories
-- define useful KPIs
-- support dashboard creation
-- translate data into operational insights
+These examples illustrate how SQL was used not only for extraction, but for analytical reasoning and business insight generation.
