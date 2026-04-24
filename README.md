@@ -1,5 +1,7 @@
 # Fringuerie Data Project
 
+SQL • KPI • Looker • Data Quality • Scenario Modeling
+Real-world data project combining analytics, dashboarding and operational data collection in a non-profit retail context.
 ## Overview
 
 This project focuses on the data analysis and operational tracking of **La Fringuerie**, a local second-hand textile activity run by the association *Les Échos Ludiques*.
@@ -237,9 +239,33 @@ Dashboard and recommendations
 ↓
 Improved operational tracking
 ```
+## Key Deliverables
+- Exploratory SQL analysis
+- KPI framework
+- Dashboard prototypes
+- Scenario modeling
+- Operational data collection design
+---
+## Selected Visual Outputs
+
+Examples included in this repository:
+
+- Sales performance monitoring dashboard  
+- Transaction and basket analysis  
+- Benchmark-inspired category analysis  
+- Scenario modeling for 2026 projections
+
+Illustrative screenshots:
+
+![Business Performance](04_assets/01_business_performance.png)
+
+![Transactions Analysis](04_assets/02_transactions_analysis.png)
+
+![Benchmark Categories](04_assets/03_benchmark_product_categories.png)
+
+![Scenario Modeling 2026](04_assets/04_scenario_modeling.png)
 
 ---
-
 # Repository Structure
 
 ```text
