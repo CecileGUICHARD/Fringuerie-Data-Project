@@ -265,6 +265,14 @@ Illustrative screenshots:
 
 ![Scenario Modeling 2026](04_assets/04_scenario_modeling.png)
 
+## Featured Insights
+
+Examples explored in the project include:
+
+- Impact of opening frequency on sales performance  
+- Transaction and basket behavior analysis  
+- Benchmark-inspired category mix analysis  
+- Scenario modeling for 2026 growth potential
 ---
 # Repository Structure
 
